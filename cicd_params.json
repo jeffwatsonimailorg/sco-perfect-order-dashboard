@@ -1,0 +1,13 @@
+{
+  "input_root_dir": "PROJECT_NAME_CHANGE_ME",
+  "input_cloud": "azure",
+  "input_cicd_platform": "github_actions",
+  "input_default_branch": "main",
+  "input_release_branch": "release/*",
+  "cloud_specific_node_type_id": "v0.236.0",
+  "input_cli_version": "v0.236.0",
+  "test_catalog_name": "test_datascience",
+  "staging_catalog_name": "staging_datascience",
+  "prod_catalog_name": "prod_datascience",
+  "input_docker_image": "databricksfieldeng/mlopsstacks:latest"
+}
