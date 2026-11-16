@@ -1,0 +1,67 @@
+new_cluster: &new_cluster
+  new_cluster:
+    spark_version: 15.4.x-cpu-ml-scala2.12
+    node_type_id: Standard_DS3_v2
+    driver_node_type_id: Standard_DS3_v2
+    autoscale:
+      min_workers: 1
+      max_workers: 8
+    azure_attributes:
+      availability: SPOT_WITH_FALLBACK_AZURE
+    data_security_mode: "SINGLE_USER"
+    custom_tags:
+      clusterSource: mlops-stacks_0.4
+      Department: MLOps
+
+resources:
+  jobs:
+    retraining_job:
+      name: mlops_${bundle.target}-PROJECT_NAME_CHANGE_ME-monitoring-retraining-job
+      tags:
+        Department: 'MLOps'
+      email_notifications:
+        on_failure:
+          - mlops-support@imail.org
+      tasks:
+        - task_key: monitored_metric_violation_check
+          <<: *new_cluster
+          notebook_task:
+            notebook_path: ../monitoring/notebooks/MonitoredMetricViolationCheck.py
+            base_parameters:
+              env: ${bundle.target}
+              # TODO Update Table Name 
+              table_name_under_monitor: ${var.catalog_name}.monitoring.PROJECT_NAME_CHANGE_ME_inference
+              # TODO Update Metrics to Monitor
+              metric_to_monitor: recall.one_vs_all[1], precision.one_vs_all[1]
+              # TODO Update Metric Name
+              metric_name: recall, precision
+              # TODO Update Metric Violation Threshold
+              metric_violation_threshold: 0.70, 0.60
+              # TODO Update Number of Evaluation Windows
+              num_evaluation_windows: 5
+              # TODO Update Number of Violation Windows
+              num_violation_windows: 2
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+        - task_key: is_metric_violated
+          depends_on:
+            - task_key: monitored_metric_violation_check
+          condition_task:
+            op: EQUAL_TO
+            left: "{{tasks.monitored_metric_violation_check.values.is_metric_violated}}"
+            right: "true"
+          # git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+        - task_key: trigger_retraining
+          depends_on:
+            - task_key: is_metric_violated
+              outcome: "true"
+          run_job_task:
+            job_id: ${resources.jobs.model_training_job.id}
+            # git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+      schedule:
+        quartz_cron_expression: "0 0 18 * * ?" # daily at 6pm
+        timezone_id: America/Denver
+
