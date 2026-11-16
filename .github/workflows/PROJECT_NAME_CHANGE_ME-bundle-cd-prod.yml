@@ -1,0 +1,51 @@
+# This GitHub workflow deploys Bundle resources (ML resource config and more)
+# defined under PROJECT_NAME_CHANGE_ME/resources/*
+# and PROJECT_NAME_CHANGE_ME/databricks.yml with prod deployment target configs,
+# when PRs are merged into the release branch
+name: Bundle Deployment for PROJECT_NAME_CHANGE_ME Prod
+
+on:
+  push:
+    branches:
+      - 'release/*'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: ./PROJECT_NAME_CHANGE_ME
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  prod:
+    environment: prd
+    concurrency: PROJECT_NAME_CHANGE_ME-prod-bundle-job
+    runs-on:
+      group: ent-eip-prd-wus2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.MI_CLIENT_ID }}
+          tenant-id: ${{ secrets.MI_TENANT_ID }}
+          subscription-id: ${{ secrets.MI_SUBSCRIPTION_ID }}
+      - uses: databricks/setup-cli@v0.236.0
+      - name: Validate Bundle For Prod
+        id: validate
+        run: |
+          databricks bundle validate -t prod
+      - name: Deploy Bundle to Prod
+        id: deploy
+        run: |
+          databricks bundle deploy -t prod
+      # - name: Run Monitoring Workflow for Prod Deployment Target in Prod Workspace
+      #   id: monitoring
+      #   run: |
+      #     databricks bundle run create_monitor_job -t prod
+      # - name: Run Model Retraining Workflow for Prod Deployment Target in Prod Workspace
+      #   id: retraining
+      #   run: |
+      #     databricks bundle run retraining_job -t prod
