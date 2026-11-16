@@ -1,0 +1,123 @@
+# The name of the bundle. run `databricks bundle schema` to see the full bundle settings schema.
+bundle:
+  name: PROJECT_NAME_CHANGE_ME
+
+workspace:
+  root_path: /Workspace/MLOps/bundles/${bundle.name}/envs/${bundle.target}
+
+variables:
+  experiment_name:
+    description: Experiment name for the model training.
+    default: /MLOps/experiments/${bundle.target}-PROJECT_NAME_CHANGE_ME-experiment
+  model_name:
+    description: Model name for the model training.
+    default: PROJECT_NAME_CHANGE_ME-model
+  catalog_name:
+    description: The catalog name to save the trained model
+  manage_group_name:
+    description: Name of MLOps manage group
+    default: DPG_MLOP_SP_MANAGE_DEV
+
+permissions:
+  - level: CAN_VIEW
+    group_name: users
+  - level: CAN_MANAGE
+    group_name: DP_DAP_MLOPS_USR
+
+# Allow users to execute models in Unity Catalog
+grants: &grants
+  grants:
+    - privileges:
+        - EXECUTE
+      principal: account users
+
+# Defines model and experiments
+resources:
+  registered_models:
+      model:
+        name: ${var.model_name}
+        catalog_name: ${var.catalog_name}
+        schema_name: ds_output
+        owner: ${var.manage_group_name}
+        comment: Registered model in Unity Catalog for the "PROJECT_NAME_CHANGE_ME" ML Project for ${var.catalog_name} deployment target.
+        <<: *grants
+
+  experiments:
+    experiment:
+      name: ${var.experiment_name}
+      # description: MLflow Experiment used to track runs for PROJECT_NAME_CHANGE_ME project.
+    
+include:
+  # Resources folder contains ML artifact resources for the ML project that defines model and experiment
+  # And workflows resources for the ML project including model training -> validation -> deployment,
+  # feature engineering,  batch inference, quality monitoring, metric refresh, alerts and triggering retraining
+  - ./resources/batch-inference-workflow-resource.yml
+  - ./resources/model-workflow-resource.yml
+  - ./resources/feature-engineering-workflow-resource.yml
+  # TODO: uncomment once monitoring inference table has been created
+  # - ./resources/monitoring-resource.yml
+
+# Deployment Target specific values for workspace
+targets:
+  dev:  # UC Catalog Name 
+    mode: development
+    default: true
+    variables:
+      catalog_name: dev_datascience
+      manage_group_name: DPG_MLOPS_SP_MANAGE_DEV
+    workspace:
+      host: https://adb-5918574733311837.17.azuredatabricks.net
+
+  staging:
+    variables:
+      catalog_name: staging_datascience
+      manage_group_name: DPG_MLOPS_SP_MANAGE_TST
+    workspace:
+      host: https://adb-7763834950602443.3.azuredatabricks.net
+    resources:
+      jobs:
+        batch_inference_job:
+          schedule:
+            pause_status: PAUSED
+        model_training_job:
+          schedule:
+            pause_status: PAUSED
+        write_feature_table_job:
+          schedule:
+            pause_status: PAUSED
+            # TODO: uncomment once monitoring inference table has been created
+        # retraining_job:
+        #   schedule:
+        #     pause_status: PAUSED
+
+
+  prod:
+    variables:
+      catalog_name: prod_datascience
+      manage_group_name: DPG_MLOPS_SP_MANAGE_PRD
+    workspace:
+      host: https://adb-3199811121433763.3.azuredatabricks.net
+
+  test:
+    variables:
+      catalog_name: test_datascience
+      manage_group_name: DPG_MLOPS_SP_MANAGE_TST
+    workspace:
+      host: https://adb-7763834950602443.3.azuredatabricks.net
+    resources:
+      jobs:
+        batch_inference_job:
+          schedule:
+            pause_status: PAUSED
+        model_training_job:
+          schedule:
+            pause_status: PAUSED
+        write_feature_table_job:
+          schedule:
+            pause_status: PAUSED
+            # TODO: uncomment once monitoring inference table has been created
+        # retraining_job:
+        #   schedule:
+        #     pause_status: PAUSED
+
+
