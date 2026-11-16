@@ -1,0 +1,85 @@
+name: Feature and Training Unit and Integration Tests for PROJECT_NAME_CHANGE_ME
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'PROJECT_NAME_CHANGE_ME/**'
+      - '.github/workflows/PROJECT_NAME_CHANGE_ME-run-tests.yml'
+
+defaults:
+  run:
+    working-directory: ./PROJECT_NAME_CHANGE_ME/  
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: PROJECT_NAME_CHANGE_ME-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            PROJECT_NAME_CHANGE_ME/requirements.txt
+            test-requirements.txt
+      # Feature store tests bring up a local Spark session, so Java is required.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            pip install -r ../test-requirements.txt
+      - name: Run tests with pytest
+        run: |
+            pytest
+
+  integration_test:
+    environment: tst
+    needs: unit_tests
+    runs-on:
+      group: ent-eip-prd-wus2
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.MI_CLIENT_ID }}
+          tenant-id: ${{ secrets.MI_TENANT_ID }}
+          subscription-id: ${{ secrets.MI_SUBSCRIPTION_ID }}
+      - uses: databricks/setup-cli@v1.16.1
+      - name: Validate Bundle For Test Deployment Target in Staging Workspace
+        id: validate
+        run: |
+          databricks bundle validate -t test
+      - name: Deploy Bundle to Test Deployment Target in Staging Workspace
+        id: deploy
+        run: |
+          databricks bundle deploy -t test
+      - name: Run Training Workflow for Test Deployment Target in Staging Workspace
+        id: training
+        run: |
+          databricks bundle run model_training_job -t test
+      - name: Run Batch Inference Workflow for Test Deployment Target in Staging Workspace
+        id: batch_inference
+        run: |
+          databricks bundle run batch_inference_job -t test
+      # - name: Run Monitoring Workflow for Test Deployment Target in Staging Workspace
+      #   id: monitoring
+      #   run: |
+      #     databricks bundle run create_monitor_job -t test
+      # - name: Run Monitoring Table Update Workflow for Test Deployment Target in Staging Workspace
+      #   id: monitoring_table_update
+      #   run: |
+      #     databricks bundle run update_monitoring_table_job -t test

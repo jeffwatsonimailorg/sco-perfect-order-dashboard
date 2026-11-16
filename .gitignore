@@ -1,0 +1,31 @@
+.DS_Store
+__pycache__/
+# local bundle files
+**/.databricks/*
+.idea
+.vscode
+mlruns
+*.db
+.dbx
+# Exclude local environment directory
+venv
+# Exclude local distribution/packaging directories
+*.egg-info/
+build
+dist
+
+#################################################################################
+# DO NOT remove these. Data should not be commited to the repos                 #
+#################################################################################
+*.ipynb
+*.RData
+.RData*
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.parquet
+*.txt
+# Allow requirements.txt files
+!*requirements.txt 
+#################################################################################
