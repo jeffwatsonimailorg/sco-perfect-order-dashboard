@@ -1,0 +1,22 @@
+# BEGIN NOTICE
+
+## Confidential
+
+These computer programs and their screen displays and documentation
+are confidential and proprietary to Intermountain
+Healthcare. (Intermountain) and may not be disclosed or used
+outside of Intermountain without the written consent of
+Intermountain in each case.
+
+## Unpublished Work of Authorship
+
+Copyright Intermountain Healthcare
+All Rights Reserved
+
+## No License
+
+No license or right to any of these computer programs, screen
+displays or documentation is granted, unless and except to the
+extent of a formal written agreement with Intermountain.
+
+# END NOTICE
