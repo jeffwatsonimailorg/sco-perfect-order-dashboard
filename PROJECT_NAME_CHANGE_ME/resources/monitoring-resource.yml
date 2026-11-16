@@ -1,0 +1,66 @@
+# NOTE: Monitoring only works on Unity Catalog tables.
+new_cluster: &new_cluster
+  new_cluster:
+    spark_version: 15.4.x-cpu-ml-scala2.12
+    node_type_id: Standard_D4ds_v6
+    num_workers: 0
+    spark_conf:
+      spark.databricks.cluster.profile: "singleNode"
+      spark.master: local[*]
+    azure_attributes:
+      availability: SPOT_WITH_FALLBACK
+    data_security_mode: "SINGLE_USER"
+    custom_tags:
+      clusterSource: mlops-stacks_0.3
+      Department: MLOps
+      ResourceClass: SingleNode
+
+resources:
+  jobs:
+    create_monitor_table_job:
+      name: mlops_${bundle.target}-PROJECT_NAME_CHANGE_ME-create-monitoring-table
+      tasks:
+        - task_key: create_monitoring_table
+          <<: *new_cluster
+          notebook_task:
+            notebook_path: ../monitoring/notebooks/feedback.py
+            base_parameters:
+              env: ${bundle.target}
+              # TODO Update Table Name 
+              output_table_name: ${var.catalog_name}.monitoring.MONITORING_TABLE
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      schedule:
+        quartz_cron_expression: "0 0 9 1 * ?" # 1 st of every month 9 AM
+        timezone_id: America/Denver
+      tags:
+        Department: 'MLOps'
+        model_name: ${bundle.name}
+      email_notifications:
+        on_failure:
+          - mlops-support@imail.org
+
+    create_monitor_job:
+      name: mlops_${bundle.target}-PROJECT_NAME_CHANGE_ME-create-monitor-job
+      tasks:
+        - task_key: create_monitor
+          <<: *new_cluster
+          notebook_task:
+            notebook_path: ../monitoring/notebooks/CreateMonitor.py
+            base_parameters:
+              CATALOG: ${var.catalog_name}
+              SCHEMA: monitoring
+              # TODO Update Model Name 
+              SHORT_MODEL_NAME: MODEL_NAME
+              ASSETS_DIR: /MLOps/databricks_lakehouse_monitoring
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      schedule:
+        quartz_cron_expression: "0 30 9 1 * ?" # 1 st of every month 9:30 AM
+        timezone_id: America/Denver
+      tags:
+        Department: 'MLOps'
+        model_name: ${bundle.name}
+      email_notifications:
+        on_failure:
+          - mlops-support@imail.org
