@@ -1,0 +1,44 @@
+# This is a basic workflow to help you get started with GitHub Actions that are run on a private hosted runner.
+# Private hosted runners are used when you need your workflow run on a machine that has network access to Intermountain Health systems and services or when you're working sensitive data that you don't want to leave GitHub's servers.
+
+name: Example workflow on private hosted runner
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events to the main branch
+  # More info: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
+    workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of private GitHub runner that the job will run on.
+    runs-on:
+      group: ent-eip-prd-wus2
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v4
+    
+    # Run a brief shell script
+    - name: Runner Working Directory
+      run: |
+        echo "Testing hosted runner"
+        # Add any command that you want to test
+        echo "Current directory:"
+        pwd
+        echo "List files:"
+        ls -l
+
+    # Runs a single command using the runners shell
+    - name: Get Runner IP Information
+      shell: bash
+      run: |
+        echo "Current IP Address"
+        echo ""
+        ifconfig
+
+
+        

@@ -1,0 +1,42 @@
+# CODEOWNERS file example
+
+# These owners will be the default owners for everything in the repo.
+# Unless a later match takes precedence, @global-owner1 and @global-owner2
+# will be requested for review when someone opens a pull request.
+# *       @global-owner1 @global-owner2
+
+# Order is important. The last matching pattern has the most precedence.
+# So if a file matches multiple patterns, the last matching pattern in the
+# file will be the one that takes effect.
+
+# You can specify individual users or teams as code owners.
+
+# Backend code owners
+# /backend/               @backend-team
+
+# Frontend code owners
+# /frontend/              @frontend-team
+
+# Database specific files
+# /database/              @database-team
+
+# CI/CD configuration files
+# /.github/workflows/     @devops-team
+# /gitlab-ci.yml          @devops-team
+
+# Documentation owners
+# /docs/                  @documentation-team
+
+# Specific file owners
+# /Dockerfile             @devops-team
+# /docker-compose.yml     @devops-team
+# /README.md              @documentation-team
+
+# You can also use patterns to match file types
+# *.js                    @javascript-team
+# *.py                    @python-team
+# *.md                    @documentation-team
+
+# When a file matches multiple patterns, the last matching pattern takes precedence.
+# For example, if a JavaScript file is in the /frontend/ directory, @frontend-team
+# will be its code owner because it is the last matching pattern.
