@@ -1,0 +1,127 @@
+# Author: Intermountain Health CloudOps Team
+# Description: A super generic Dependabot configuration file that is a starting point, to be used to enable dependabot for any repository.
+# This script will enable dependabot for all package ecosystems that are supported by dependabot.
+# Date: March-14-2024
+
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: bundler
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: devcontainers
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: mix
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: gomod
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: elm
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: gitsubmodule
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+    groups:
+      action-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: monthly
+    ignore:
+      - dependency-name: pyspark
+      - dependency-name: mlflow
+    target-branch: develop
+    groups:
+      py-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: swift
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: pub
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
+
+  - package-ecosystem: terraform
+    directory: "/"
+    schedule:
+      interval: monthly
+    target-branch: develop
