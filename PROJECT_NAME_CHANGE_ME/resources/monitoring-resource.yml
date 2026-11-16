@@ -1,0 +1,67 @@
+# NOTE: Monitoring only works on Unity Catalog tables.
+resources:
+  jobs:
+    create_monitor_job:
+      name: mlops_${bundle.target}-${bundle.name}-create-monitor-job
+      tasks:
+        - task_key: create_monitoring_table
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file: 
+              path:  ../sql/create-monitoring-table.sql
+            parameters:
+              catalog: ${var.catalog_name}
+              schema: monitoring
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+      
+        - task_key: create_monitor
+          depends_on:
+            - task_key: create_monitoring_table
+          notebook_task:
+            notebook_path: ../monitoring/notebooks/CreateMonitor.py
+            base_parameters:
+              catalog_name: ${var.catalog_name}
+              schema_name: monitoring
+              short_model_name: ${bundle.name}
+              assets_dir: /MLOps/databricks_lakehouse_monitoring
+              # TODO Update monitor configuration
+              granularities: '["1 day"]'
+              model_version_col: model_version
+              prediction_col: pred_class
+              label_col: pneumonia_truth
+              problem_type: PROBLEM_TYPE_CLASSIFICATION
+              prediction_dts_col: prediction_dts
+              monitor_schedule: 0 0 8 * * ?
+              monitor_schedule_timezone: America/Denver
+              slicing_exprs: '["age<25","age>60"]' # not currently used in notebook
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+        
+      tags:
+        Department: 'MLOps'
+        model_name: ${bundle.name}      
+      email_notifications:
+        on_failure:
+          - mlops-support@imail.org
+
+    update_monitoring_table_job:
+      name: mlops_${bundle.target}-${bundle.name}-update-monitoring-table-job
+      tasks:
+        - task_key: update_monitoring_table
+          sql_task:
+            warehouse_id: ${var.warehouse_id}
+            file: 
+              path:  ../sql/update-monitoring-table.sql
+            parameters:
+              catalog: ${var.catalog_name}
+              schema: monitoring
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
+
+      tags:
+        Department: 'MLOps'
+        model_name: ${bundle.name}
+      email_notifications:
+        on_failure:
+          - mlops-support@imail.org
