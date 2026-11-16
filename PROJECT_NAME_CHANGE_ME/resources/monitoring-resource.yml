@@ -1,0 +1,37 @@
+# NOTE: Monitoring only works on Unity Catalog tables.
+new_cluster: &new_cluster
+  new_cluster:
+    spark_version: 15.4.x-cpu-ml-scala2.12
+    node_type_id: Standard_D3_v2
+    driver_node_type_id: Standard_D3_v2
+    is_single_node: "true"
+    spark_conf: 
+      spark.databricks.cluster.profile: "singleNode"
+    azure_attributes:
+      availability: SPOT_WITH_FALLBACK
+    data_security_mode: "SINGLE_USER"
+    custom_tags:
+      clusterSource: mlops-stacks_0.4
+      Department: MLOps
+
+resources:
+  jobs:
+    create_monitor_job:
+      name: mlops_${bundle.target}-PROJECT_NAME_CHANGE_ME-create-monitor-job
+      tags:
+        Department: 'MLOps'
+      tasks:
+        - task_key: create_monitor
+          <<: *new_cluster
+          notebook_task:
+            notebook_path: ../monitoring/notebooks/CreateMonitor.py
+            base_parameters:
+              CATALOG: ${var.catalog_name}
+              SCHEMA: monitoring
+              # TODO Update Short Model Name that is used as the prefix for the table name under monitor
+              SHORT_MODEL_NAME: PROJECT_NAME_CHANGE_ME
+              TABLE_NAME: ${var.catalog_name}.monitoring.PROJECT_NAME_CHANGE_ME_inference
+              ASSETS_DIR: /MLOps/databricks_lakehouse_monitoring
+              OUTPUT_SCHEMA_NAME: ${var.catalog_name}.monitoring
+              # git source information of current ML resource deployment. It will be persisted as part of the workflow run
+              git_source_info: url:${bundle.git.origin_url}; branch:${bundle.git.branch}; commit:${bundle.git.commit}
